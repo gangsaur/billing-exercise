@@ -11,3 +11,20 @@ Tags for grouping commit content, not a strict requirements.
 - [Refactor]: Changes related to restructuring which does not or mostly not affect functionality
 - [Build]: Changes related to build, setup, and deployment
 - [Test]: Changes related to test only
+
+# Requirements
+
+- Go
+- Docker
+
+# Setup
+
+Obviously for local dev only since it's an exercise repo.
+
+1. Setup dependency using docker
+```
+cd deploy/dev
+docker-compose up -d
+```
+
+2. TBD
