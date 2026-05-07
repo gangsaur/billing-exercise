@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+
+	"gangsaur.com/billing-exercise/internal/middleware"
 )
 
 type ApiServer struct {
@@ -54,11 +56,18 @@ func (s ApiServer) ListenAndServe() error {
 
 func createMux() *http.ServeMux {
 	mux := http.NewServeMux()
+	basicChain := middleware.MiddlewareChain{middleware.RequestMiddleware, middleware.LogMiddleware}
 
 	mux.HandleFunc("GET /h", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("OK"))
 	})
+
+	// Temporairly for testing middleware
+	mux.Handle("GET /loan/{id}", basicChain.ThenFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("OK"))
+	}))
 
 	return mux
 }
