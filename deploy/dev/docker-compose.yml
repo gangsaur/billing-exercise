@@ -1,0 +1,11 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    # set shared memory limit when using docker compose
+    shm_size: 128mb
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_PASSWORD: billing-exercise # Simple creds for dev only
+      POSTGRES_USER: billing-exercise
