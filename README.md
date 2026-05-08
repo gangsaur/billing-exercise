@@ -27,9 +27,12 @@ cd deploy/dev
 docker-compose up -d
 ```
 
-2. Run the init script from the project root directory to create initial tables
+2. Run the init script from the project root directory to create initial tables. Also seed it if needed.
 ```
 go run cmd/script/run-sql/main.go 01-init.sql
+
+# Only if you want mock starting data
+go run cmd/script/run-sql/main.go 02-seed.sql
 ```
 
 3. Run the API service

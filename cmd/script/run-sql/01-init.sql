@@ -9,13 +9,14 @@ CREATE TABLE loans (
   duration smallint NOT NULL,
   principal_amount integer NOT NULL,
   outstanding_amount integer NOT NULL,
+  status smallint NOT NULL,
   interest real NOT NULL,
   user_id bigint NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX loans_user_id_idx ON loans (user_id);
+CREATE INDEX loans_user_id_status_idx ON loans (user_id, status);
 
 CREATE TABLE loan_payments (
   id bigserial PRIMARY KEY,

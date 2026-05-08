@@ -1,6 +1,6 @@
 -- Seed for testing basic functionality
 -- Assume empty tables and simple due date
-INSERT INTO loans (duration, principal_amount, outstanding_amount, interest, user_id) VALUES(50, 5000000, 5000000, 10, 1);
+INSERT INTO loans (duration, principal_amount, outstanding_amount, status, interest, user_id) VALUES(50, 5000000, 5000000, 0, 10, 1);
 INSERT INTO users (created_at) VALUES(now());
 INSERT INTO loan_payments (period, amount, due_date, status, loan_id) VALUES(1, 110000, NOW() + INTERVAL '1 week', 0, 1);
 INSERT INTO loan_payments (period, amount, due_date, status, loan_id) VALUES(2, 110000, NOW() + INTERVAL '2 week', 0, 1);
