@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"gangsaur.com/billing-exercise/internal/db/psql"
+	"gangsaur.com/billing-exercise/internal/repository/db/psql"
 	"gangsaur.com/billing-exercise/internal/service"
 )
 

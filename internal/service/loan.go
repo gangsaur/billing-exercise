@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"gangsaur.com/billing-exercise/internal/db/psql"
+	"gangsaur.com/billing-exercise/internal/repository/db/psql"
 )
 
 type LoanService struct {

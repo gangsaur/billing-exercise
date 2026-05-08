@@ -8,9 +8,9 @@ import (
 	"os"
 	"os/signal"
 
-	"gangsaur.com/billing-exercise/internal/db/psql"
 	"gangsaur.com/billing-exercise/internal/handler"
 	"gangsaur.com/billing-exercise/internal/middleware"
+	"gangsaur.com/billing-exercise/internal/repository/db/psql"
 	"gangsaur.com/billing-exercise/internal/service"
 )
 
