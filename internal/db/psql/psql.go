@@ -2,11 +2,13 @@ package psql
 
 import (
 	"context"
+	"errors"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Psql struct {
-}
+var ErrNotFound = errors.New("not found")
 
 type Loan struct {
 	Id                int
@@ -19,6 +21,21 @@ type Loan struct {
 	UpdatedAt         time.Time
 }
 
-func (p *Psql) GetLoan(ctx context.Context, id int) (Loan, error) {
-	return Loan{}, nil
+type Psql struct {
+	pool *pgxpool.Pool
+}
+
+func NewPsql(dsn string) (*Psql, error) {
+	pool, err := pgxpool.New(context.Background(), dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Psql{
+		pool: pool,
+	}, nil
+}
+
+func (p *Psql) CloseConnection() {
+	p.pool.Close()
 }

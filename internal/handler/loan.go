@@ -30,10 +30,10 @@ func toLoanResponse(loan psql.Loan) LoanResponse {
 }
 
 type LoanHandler struct {
-	loanService service.LoanService
+	loanService *service.LoanService
 }
 
-func NewLoanHandler(l service.LoanService) *LoanHandler {
+func NewLoanHandler(l *service.LoanService) *LoanHandler {
 	return &LoanHandler{
 		loanService: l,
 	}
@@ -43,19 +43,19 @@ func (l *LoanHandler) GetLoan() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
-			WriteGenericError(r.Context(), w, r, err)
+			WriteErrorResponse(r.Context(), w, r, err)
 			return
 		}
 
 		loan, err := l.loanService.GetLoan(r.Context(), id)
 		if err != nil {
-			WriteGenericError(r.Context(), w, r, err)
+			WriteErrorResponse(r.Context(), w, r, err)
 			return
 		}
 
 		res, err := json.Marshal(toLoanResponse(loan))
 		if err != nil {
-			WriteGenericError(r.Context(), w, r, err)
+			WriteErrorResponse(r.Context(), w, r, err)
 			return
 		}
 
