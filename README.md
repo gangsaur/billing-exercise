@@ -27,7 +27,7 @@ cd deploy/dev
 docker-compose up -d
 ```
 
-2. Run the init script to create initial tables
+2. Run the init script from the project root directory to create initial tables
 ```
 go run cmd/script/run-sql/main.go 01-init.sql
 ```
