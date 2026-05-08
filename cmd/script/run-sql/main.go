@@ -18,9 +18,9 @@ func main() {
 	filename := args[1]
 
 	_ = godotenv.Load()
-	dsn := os.Getenv("PSQL_URL")
+	dsn := os.Getenv("PSQL_DSN")
 	if dsn == "" {
-		log.Fatal("PSQL_URL is required")
+		log.Fatal("PSQL_DSN is required")
 	}
 
 	ctx := context.Background()
