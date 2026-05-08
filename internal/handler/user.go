@@ -9,14 +9,15 @@ import (
 	"gangsaur.com/billing-exercise/internal/service"
 )
 
-type UserResponse struct {
+type UserResponseDelinquent struct {
 	Id         int  `json:"id"`
-	Delinquent bool `json:"delinquent,omitempty"`
+	Delinquent bool `json:"delinquent"`
 }
 
-func toUserResponse(user psql.User) UserResponse {
-	return UserResponse{
-		Id: user.Id,
+func toUserResponseDelinquent(user psql.User, delinquentStatus bool) UserResponseDelinquent {
+	return UserResponseDelinquent{
+		Id:         user.Id,
+		Delinquent: delinquentStatus,
 	}
 }
 
@@ -38,13 +39,13 @@ func (u *UserHandler) GetUser() http.HandlerFunc {
 			return
 		}
 
-		user, err := u.userService.GetUser(r.Context(), id)
+		user, delinquentStatus, err := u.userService.GetUser(r.Context(), id)
 		if err != nil {
 			WriteErrorResponse(r.Context(), w, r, err)
 			return
 		}
 
-		res, err := json.Marshal(toUserResponse(user))
+		res, err := json.Marshal(toUserResponseDelinquent(user, delinquentStatus))
 		if err != nil {
 			WriteErrorResponse(r.Context(), w, r, err)
 			return

@@ -14,6 +14,7 @@ type LoanResponse struct {
 	Duration          int     `json:"duration"`
 	PrincipalAmount   int     `json:"principal_amount"`
 	OutstandingAmount int     `json:"outstanding_amount"`
+	Status            int     `json:"status"`
 	InterestRate      float32 `json:"interest"`
 	UserId            int     `json:"user_id"`
 }
