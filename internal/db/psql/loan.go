@@ -3,9 +3,21 @@ package psql
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
+
+type Loan struct {
+	Id                int
+	Duration          int
+	PrincipalAmount   int
+	OutstandingAmount int
+	InterestRate      float32
+	UserId            int
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+}
 
 func (p *Psql) GetLoan(ctx context.Context, id int) (Loan, error) {
 	sql := "SELECT id, duration, principal_amount, outstanding_amount, interest, user_id, created_at, updated_at FROM loans WHERE id = $1"

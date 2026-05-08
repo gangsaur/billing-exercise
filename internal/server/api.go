@@ -77,13 +77,19 @@ func createMux(p *psql.Psql) *http.ServeMux {
 	loanService := service.NewLoanService(p)
 	loanHandler := handler.NewLoanHandler(loanService)
 
+	userSevice := service.NewUserService(p)
+	userHandler := handler.NewUserHandler(userSevice)
+
 	mux.HandleFunc("GET /h", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("OK"))
 	})
 
-	// Temporairly for testing middleware
+	// Loan
 	mux.Handle("GET /loan/{id}", basicChain.ThenFunc(loanHandler.GetLoan()))
+
+	// User
+	mux.Handle("GET /user/{id}", basicChain.ThenFunc(userHandler.GetUser()))
 
 	return mux
 }
