@@ -14,7 +14,7 @@ func WriteErrorResponse(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	log.Printf("%s - %s", err.Error(), r.Context().Value(static.RequestIdKey))
 
 	if errors.Is(err, psql.ErrNotFound) {
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusNotFound)
 	} else {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
