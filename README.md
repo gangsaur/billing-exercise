@@ -61,7 +61,7 @@ go run cmd/api/main.go
 curl -X GET http://localhost:9990/loan/1
 curl -X GET http://localhost:9990/loan/2
 ```
-= `IsDelinquent` via `POST /loan/{id}/pay`
+- `IsDelinquent` via `POST /loan/{id}/pay`
 ```
 curl -X POST -i --data '{"amount": 110000}' http://localhost:9990/loan/1/pay
 ```
