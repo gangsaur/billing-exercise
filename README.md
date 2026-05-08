@@ -16,6 +16,7 @@ Tags for grouping commit content, not a strict requirements.
 
 - Go
 - Docker
+- Mockery (for mock generation only, not needed for running)
 
 # Setup
 
