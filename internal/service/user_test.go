@@ -32,7 +32,7 @@ func TestUserService_GetUser(t *testing.T) {
 		wantErr                                           bool
 	}{
 		{
-			name:      "success, not delinquent",
+			name:      "success case, not delinquent",
 			mockStore: storeMocks.NewMockStore(t),
 			id:        1,
 			mockGetUserResponse: psql.User{
@@ -59,7 +59,7 @@ func TestUserService_GetUser(t *testing.T) {
 			wantErr:              false,
 		},
 		{
-			name:      "success, delinquent",
+			name:      "success case, delinquent",
 			mockStore: storeMocks.NewMockStore(t),
 			id:        1,
 			mockGetUserResponse: psql.User{
@@ -134,7 +134,6 @@ func TestUserService_GetUser(t *testing.T) {
 			if tt.mockGetUserErr == nil && tt.mockGetLoanByUserIdAndStatusErr == nil {
 				tt.mockStore.On("GetLoanPaymentsByLoanIdsStatusDueDate", mock.Anything, tt.paramsLoandIds, psql.LoanPaymentStatusScheduled, mock.Anything, true).
 					Return(tt.mockGetLoanPaymentsByLoanIdsStatusDueDateResponse, tt.mockGetLoanPaymentsByLoanIdsStatusDueDateErr)
-
 			}
 
 			gotUser, gotDelinquenStatus, gotErr := u.GetUser(context.Background(), tt.id)
