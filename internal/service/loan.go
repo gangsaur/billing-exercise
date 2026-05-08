@@ -36,7 +36,7 @@ func (l *LoanService) PayLoan(ctx context.Context, id int, amount int) (psql.Loa
 	}
 
 	// Get unpaid loan payments and calculate the needed payment
-	unpaidLoanPayments, err := l.store.GetLoanPaymentsByLoanIdsStatusDueDate(ctx, []int{id}, psql.LoanPaymentStatusScheduled, time.Now().AddDate(0, 0, 350), true)
+	unpaidLoanPayments, err := l.store.GetLoanPaymentsByLoanIdsStatusDueDate(ctx, []int{id}, psql.LoanPaymentStatusScheduled, time.Now().AddDate(0, 0, 7), true)
 	if err != nil {
 		return psql.Loan{}, err
 	}
