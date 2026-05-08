@@ -39,3 +39,9 @@ go run cmd/script/run-sql/main.go 02-seed.sql
 ```
 go run cmd/api/main.go
 ```
+
+# Notes
+
+- GetOutstanding: Implemented as part of `GetLoan` in `internal/service/loan.go` (OutstandingAmount is saved in DB)
+- IsDelinquent: Implemented as part of `GetUser` in `internal/service/user.go` (Calculated by fetching user's loan and loanPayments)
+- MakePayment: Implemented as `PayLoan` in `internal/service/loan.go`
