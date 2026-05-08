@@ -6,15 +6,11 @@ import (
 	"gangsaur.com/billing-exercise/internal/db/psql"
 )
 
-type LoanStore interface {
-	GetLoan(ctx context.Context, id int) (psql.Loan, error)
-}
-
 type LoanService struct {
-	store LoanStore
+	store Store
 }
 
-func NewLoanService(l LoanStore) *LoanService {
+func NewLoanService(l Store) *LoanService {
 	return &LoanService{
 		store: l,
 	}

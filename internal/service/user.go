@@ -6,15 +6,11 @@ import (
 	"gangsaur.com/billing-exercise/internal/db/psql"
 )
 
-type UserStore interface {
-	GetUser(ctx context.Context, id int) (psql.User, error)
-}
-
 type UserService struct {
-	store UserStore
+	store Store
 }
 
-func NewUserService(u UserStore) *UserService {
+func NewUserService(u Store) *UserService {
 	return &UserService{
 		store: u,
 	}
