@@ -37,6 +37,10 @@ func (p *Psql) GetLoan(ctx context.Context, id int) (Loan, error) {
 	return loan, err
 }
 
+func (p *Psql) GetLoanAndLoanPaymentsByStatusDueDate(ctx context.Context, id int, status int, date time.Time, dueDateBeforeDate bool) (Loan, []LoanPayment, error) {
+	return Loan{}, nil, nil // TODO
+}
+
 func (p *Psql) GetLoanByUserIdAndStatus(ctx context.Context, userId int, status int) ([]Loan, error) {
 	sql := "SELECT id, duration, principal_amount, outstanding_amount, status, interest, user_id, created_at, updated_at FROM loans WHERE user_id = $1 AND status = $2"
 
@@ -84,5 +88,22 @@ func (p *Psql) PayLoan(ctx context.Context, loanId int, loanPaymentIds []int, ou
 	}
 
 	err = tx.Commit(ctx)
+	return err
+}
+
+func (p *Psql) ReduceLoanOutstandingAmountTx(ctx context.Context, tx pgx.Tx, outstandingDeduction, loanId, previousOutstanding int) error {
+	_, err := tx.Exec(ctx, "UPDATE loans SET outstanding_amount = outstanding_amount - $1, updated_at = NOW() WHERE id = $2 AND outstanding_amount = $3",
+		outstandingDeduction, loanId, previousOutstanding)
+	return err
+}
+
+func (p *Psql) ReduceLoanOutstandingAmountStatusPaidTx(ctx context.Context, tx pgx.Tx, outstandingDeduction, loanId, previousOutstanding int) error {
+	_, err := tx.Exec(ctx, "UPDATE loans SET outstanding_amount = outstanding_amount - $1, status = 1, updated_at = NOW() WHERE id = $2 AND outstanding_amount = $3",
+		outstandingDeduction, loanId, previousOutstanding)
+	return err
+}
+
+func (p *Psql) UpdateLoanPaymentStatusPaidTx(ctx context.Context, tx pgx.Tx, loanPaymentIds []int) error {
+	_, err := tx.Exec(ctx, "UPDATE loan_payments SET status = 1, paid_at = NOW(), updated_at = NOW() WHERE id = ANY($1) AND status=0", loanPaymentIds)
 	return err
 }

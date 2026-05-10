@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -26,4 +27,8 @@ func NewPsql(dsn string) (*Psql, error) {
 
 func (p *Psql) CloseConnection() {
 	p.pool.Close()
+}
+
+func (p *Psql) Begin(ctx context.Context) (pgx.Tx, error) {
+	return p.pool.Begin(ctx)
 }
