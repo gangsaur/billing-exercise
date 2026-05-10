@@ -77,7 +77,7 @@ func (p *Psql) PayLoan(ctx context.Context, loanId int, loanPaymentIds []int, ou
 	}
 
 	for _, lpId := range loanPaymentIds { // Optimize later by building single query
-		_, err = tx.Exec(ctx, "UPDATE loan_payments SET status = 1, paid_at = NOW(), updated_at = NOW() WHERE id = $1", lpId)
+		_, err = tx.Exec(ctx, "UPDATE loan_payments SET status = 1, paid_at = NOW(), updated_at = NOW() WHERE id = $1 AND status=0", lpId)
 		if err != nil {
 			return err
 		}
