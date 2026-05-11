@@ -8,7 +8,7 @@ import (
 
 	"gangsaur.com/billing-exercise/internal/repository/db/psql"
 	"gangsaur.com/billing-exercise/internal/service"
-	storeMocks "gangsaur.com/billing-exercise/internal/service/mocks"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -18,7 +18,7 @@ func TestUserService_GetUser(t *testing.T) {
 
 	tests := []struct {
 		name                                              string
-		mockStore                                         *storeMocks.MockStore
+		mockStore                                         *service.MockStore
 		id                                                int
 		mockGetUserResponse                               psql.User
 		mockGetUserErr                                    error
@@ -33,7 +33,7 @@ func TestUserService_GetUser(t *testing.T) {
 	}{
 		{
 			name:      "success case, not delinquent",
-			mockStore: storeMocks.NewMockStore(t),
+			mockStore: service.NewMockStore(t),
 			id:        1,
 			mockGetUserResponse: psql.User{
 				Id:        1,
@@ -60,7 +60,7 @@ func TestUserService_GetUser(t *testing.T) {
 		},
 		{
 			name:      "success case, delinquent",
-			mockStore: storeMocks.NewMockStore(t),
+			mockStore: service.NewMockStore(t),
 			id:        1,
 			mockGetUserResponse: psql.User{
 				Id:        1,
@@ -87,14 +87,14 @@ func TestUserService_GetUser(t *testing.T) {
 		},
 		{
 			name:           "error case, GetUser error",
-			mockStore:      storeMocks.NewMockStore(t),
+			mockStore:      service.NewMockStore(t),
 			id:             1,
 			mockGetUserErr: errors.New("GetUser error"),
 			wantErr:        true,
 		},
 		{
 			name:      "error case, GetLoanByUserIdAndStatus error",
-			mockStore: storeMocks.NewMockStore(t),
+			mockStore: service.NewMockStore(t),
 			id:        1,
 			mockGetUserResponse: psql.User{
 				Id:        1,
@@ -106,7 +106,7 @@ func TestUserService_GetUser(t *testing.T) {
 		},
 		{
 			name:      "error case, GetLoanByUserIdAndStatus error",
-			mockStore: storeMocks.NewMockStore(t),
+			mockStore: service.NewMockStore(t),
 			id:        1,
 			mockGetUserResponse: psql.User{
 				Id:        1,
