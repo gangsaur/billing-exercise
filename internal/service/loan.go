@@ -19,12 +19,12 @@ func NewLoanService(l Store) *LoanService {
 }
 
 func (l *LoanService) GetLoan(ctx context.Context, id int) (psql.Loan, error) {
-	loanData, err := l.store.GetLoan(ctx, id)
+	loan, err := l.store.GetLoan(ctx, id)
 	if err != nil {
 		return psql.Loan{}, err
 	}
 
-	return loanData, nil
+	return loan, nil
 }
 
 func (l *LoanService) PayLoan(ctx context.Context, id int, amount int) (psql.Loan, error) {
