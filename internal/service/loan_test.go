@@ -8,7 +8,6 @@ import (
 
 	"gangsaur.com/billing-exercise/internal/repository/db/psql"
 	"gangsaur.com/billing-exercise/internal/service"
-	storeMocks "gangsaur.com/billing-exercise/internal/service/mocks"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -19,7 +18,7 @@ func TestLoanService_GetLoan(t *testing.T) {
 
 	tests := []struct {
 		name                string
-		mockStore           *storeMocks.MockStore
+		mockStore           *service.MockStore
 		id                  int
 		mockGetLoanResponse psql.Loan
 		mockGetLoanErr      error
@@ -29,7 +28,7 @@ func TestLoanService_GetLoan(t *testing.T) {
 		{
 			name:      "success case",
 			id:        1,
-			mockStore: storeMocks.NewMockStore(t),
+			mockStore: service.NewMockStore(t),
 			mockGetLoanResponse: psql.Loan{
 				Id:                1,
 				Duration:          50,
@@ -56,7 +55,7 @@ func TestLoanService_GetLoan(t *testing.T) {
 		{
 			name:           "error case, GetLoan throw error",
 			id:             2,
-			mockStore:      storeMocks.NewMockStore(t),
+			mockStore:      service.NewMockStore(t),
 			mockGetLoanErr: errors.New("GetLoan error"),
 			wantErr:        true,
 		},
@@ -86,7 +85,7 @@ func TestLoanService_PayLoan(t *testing.T) {
 
 	tests := []struct {
 		name                                              string
-		mockStore                                         *storeMocks.MockStore
+		mockStore                                         *service.MockStore
 		id                                                int
 		amount                                            int
 		mockGetLoanAndLoanPaymentsByStatusDueDateResponse loanAndLoanPayments
@@ -106,7 +105,7 @@ func TestLoanService_PayLoan(t *testing.T) {
 	}{
 		{
 			name:      "success case, single payment",
-			mockStore: storeMocks.NewMockStore(t),
+			mockStore: service.NewMockStore(t),
 			id:        1,
 			amount:    110000,
 			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
@@ -121,7 +120,7 @@ func TestLoanService_PayLoan(t *testing.T) {
 		},
 		{
 			name:      "success case, multiple payments",
-			mockStore: storeMocks.NewMockStore(t),
+			mockStore: service.NewMockStore(t),
 			id:        1,
 			amount:    330000,
 			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
@@ -140,7 +139,7 @@ func TestLoanService_PayLoan(t *testing.T) {
 		},
 		{
 			name:      "error case, GetLoanAndLoanPaymentsByStatusDueDate error",
-			mockStore: storeMocks.NewMockStore(t),
+			mockStore: service.NewMockStore(t),
 			id:        1,
 			amount:    220000,
 			mockGetLoanAndLoanPaymentsByStatusDueDateErr: errors.New("GetLoanAndLoanPaymentsByStatusDueDate error"),
@@ -148,7 +147,7 @@ func TestLoanService_PayLoan(t *testing.T) {
 		},
 		{
 			name:      "error case, invalid amount",
-			mockStore: storeMocks.NewMockStore(t),
+			mockStore: service.NewMockStore(t),
 			id:        1,
 			amount:    550000,
 			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
@@ -163,7 +162,7 @@ func TestLoanService_PayLoan(t *testing.T) {
 		},
 		{
 			name:      "error case, Begin error",
-			mockStore: storeMocks.NewMockStore(t),
+			mockStore: service.NewMockStore(t),
 			id:        1,
 			amount:    220000,
 			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
@@ -178,7 +177,7 @@ func TestLoanService_PayLoan(t *testing.T) {
 		},
 		{
 			name:      "error case, ReduceLoanOutstandingAmountTx error",
-			mockStore: storeMocks.NewMockStore(t),
+			mockStore: service.NewMockStore(t),
 			id:        1,
 			amount:    220000,
 			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
@@ -195,7 +194,7 @@ func TestLoanService_PayLoan(t *testing.T) {
 		},
 		{
 			name:      "error case, ReduceLoanOutstandingAmountStatusPaidTx error",
-			mockStore: storeMocks.NewMockStore(t),
+			mockStore: service.NewMockStore(t),
 			id:        1,
 			amount:    220000,
 			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
@@ -212,7 +211,7 @@ func TestLoanService_PayLoan(t *testing.T) {
 		},
 		{
 			name:      "error case, UpdateLoanPaymentStatusPaidTx error",
-			mockStore: storeMocks.NewMockStore(t),
+			mockStore: service.NewMockStore(t),
 			id:        1,
 			amount:    220000,
 			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
@@ -230,7 +229,7 @@ func TestLoanService_PayLoan(t *testing.T) {
 		},
 		{
 			name:      "error case, Commit error",
-			mockStore: storeMocks.NewMockStore(t),
+			mockStore: service.NewMockStore(t),
 			id:        1,
 			amount:    220000,
 			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
@@ -248,7 +247,7 @@ func TestLoanService_PayLoan(t *testing.T) {
 		},
 		{
 			name:      "error case, GetLoan error",
-			mockStore: storeMocks.NewMockStore(t),
+			mockStore: service.NewMockStore(t),
 			id:        1,
 			amount:    220000,
 			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
