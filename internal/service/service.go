@@ -22,4 +22,6 @@ type Store interface {
 	GetUser(ctx context.Context, id int) (psql.User, error)
 
 	Begin(ctx context.Context) (pgx.Tx, error)
+	Commit(ctx context.Context, tx pgx.Tx) error
+	Rollback(ctx context.Context, tx pgx.Tx) error
 }

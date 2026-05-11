@@ -92,7 +92,7 @@ func (p *Psql) GetLoanByUserIdAndStatus(ctx context.Context, userId int, status 
 	}
 	defer rows.Close()
 
-	loans := make([]Loan, 0, 0)
+	loans := make([]Loan, 0)
 	for rows.Next() {
 		var loan Loan
 		err := rows.Scan(&loan.Id, &loan.Duration, &loan.PrincipalAmount, &loan.OutstandingAmount, &loan.InterestRate, &loan.Status, &loan.UserId, &loan.CreatedAt, &loan.UpdatedAt)

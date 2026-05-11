@@ -104,6 +104,63 @@ func (_c *MockStore_Begin_Call) RunAndReturn(run func(ctx context.Context) (pgx.
 	return _c
 }
 
+// Commit provides a mock function for the type MockStore
+func (_mock *MockStore) Commit(ctx context.Context, tx pgx.Tx) error {
+	ret := _mock.Called(ctx, tx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Commit")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgx.Tx) error); ok {
+		r0 = returnFunc(ctx, tx)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockStore_Commit_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Commit'
+type MockStore_Commit_Call struct {
+	*mock.Call
+}
+
+// Commit is a helper method to define mock.On call
+//   - ctx context.Context
+//   - tx pgx.Tx
+func (_e *MockStore_Expecter) Commit(ctx interface{}, tx interface{}) *MockStore_Commit_Call {
+	return &MockStore_Commit_Call{Call: _e.mock.On("Commit", ctx, tx)}
+}
+
+func (_c *MockStore_Commit_Call) Run(run func(ctx context.Context, tx pgx.Tx)) *MockStore_Commit_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 pgx.Tx
+		if args[1] != nil {
+			arg1 = args[1].(pgx.Tx)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockStore_Commit_Call) Return(err error) *MockStore_Commit_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockStore_Commit_Call) RunAndReturn(run func(ctx context.Context, tx pgx.Tx) error) *MockStore_Commit_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetLoan provides a mock function for the type MockStore
 func (_mock *MockStore) GetLoan(ctx context.Context, id int) (psql.Loan, error) {
 	ret := _mock.Called(ctx, id)
@@ -709,6 +766,63 @@ func (_c *MockStore_ReduceLoanOutstandingAmountTx_Call) Return(err error) *MockS
 }
 
 func (_c *MockStore_ReduceLoanOutstandingAmountTx_Call) RunAndReturn(run func(ctx context.Context, tx pgx.Tx, outstandingDeduction int, loanId int, previousOutstanding int) error) *MockStore_ReduceLoanOutstandingAmountTx_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Rollback provides a mock function for the type MockStore
+func (_mock *MockStore) Rollback(ctx context.Context, tx pgx.Tx) error {
+	ret := _mock.Called(ctx, tx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Rollback")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgx.Tx) error); ok {
+		r0 = returnFunc(ctx, tx)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockStore_Rollback_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Rollback'
+type MockStore_Rollback_Call struct {
+	*mock.Call
+}
+
+// Rollback is a helper method to define mock.On call
+//   - ctx context.Context
+//   - tx pgx.Tx
+func (_e *MockStore_Expecter) Rollback(ctx interface{}, tx interface{}) *MockStore_Rollback_Call {
+	return &MockStore_Rollback_Call{Call: _e.mock.On("Rollback", ctx, tx)}
+}
+
+func (_c *MockStore_Rollback_Call) Run(run func(ctx context.Context, tx pgx.Tx)) *MockStore_Rollback_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 pgx.Tx
+		if args[1] != nil {
+			arg1 = args[1].(pgx.Tx)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockStore_Rollback_Call) Return(err error) *MockStore_Rollback_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockStore_Rollback_Call) RunAndReturn(run func(ctx context.Context, tx pgx.Tx) error) *MockStore_Rollback_Call {
 	_c.Call.Return(run)
 	return _c
 }

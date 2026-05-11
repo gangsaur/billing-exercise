@@ -89,12 +89,12 @@ func (l *LoanService) PayLoanV2(ctx context.Context, id int, amount int) (psql.L
 	}
 	slices.Sort(loanPaymentIds)
 
-	// Make Payment - Update to use transaction laters
+	// Make Payment
 	tx, err := l.store.Begin(ctx)
 	if err != nil {
 		return psql.Loan{}, err
 	}
-	defer tx.Rollback(ctx)
+	defer l.store.Rollback(ctx, tx)
 
 	// Update Loan
 	outstandingDeduction := int(float32(amount) / (1.0 + (loan.InterestRate / 100.0)))
@@ -114,7 +114,7 @@ func (l *LoanService) PayLoanV2(ctx context.Context, id int, amount int) (psql.L
 	}
 
 	// Commit
-	err = tx.Commit(ctx)
+	err = l.store.Commit(ctx, tx)
 	if err != nil {
 		return psql.Loan{}, err
 	}
