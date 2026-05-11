@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http/httptest"
 	"strconv"
@@ -97,14 +98,14 @@ func TestUserHandler_GetUser(t *testing.T) {
 
 			// Construct test request and setup mocks
 			requestParamsIdStr := strconv.Itoa(tt.requestParamsId)
-			r := httptest.NewRequest("GET", "/user/"+requestParamsIdStr, nil)
+			r := httptest.NewRequest("GET", fmt.Sprintf("/user/%s", requestParamsIdStr), nil)
 
 			if tt.requestParamsId != -1 {
 				r.SetPathValue("id", requestParamsIdStr)
 				tt.mockService.On("GetUser", mock.Anything, tt.requestParamsId).
 					Return(tt.mockGetUserResponse.user, tt.mockGetUserResponse.delinquent, tt.mockGetUserErr)
 			} else {
-				r.SetPathValue("id", "invalid id")
+				r.SetPathValue("id", "invalid request parameters id")
 			}
 
 			w := httptest.NewRecorder()
