@@ -283,3 +283,95 @@ func TestLoanService_PayLoan(t *testing.T) {
 		})
 	}
 }
+
+func TestLoanService_PayLoanV2(t *testing.T) {
+	type loanAndLoanPayments struct {
+		Loan         psql.Loan
+		LoanPayments []psql.LoanPayment
+	}
+
+	tests := []struct {
+		name                                              string
+		mockStore                                         *storeMocks.MockStore
+		id                                                int
+		amount                                            int
+		mockGetLoanAndLoanPaymentsByStatusDueDateResponse loanAndLoanPayments
+		mockGetLoanAndLoanPaymentsByStatusDueDateErr      error
+		flagInvalidAmount                                 bool
+		mockBeginErr                                      error
+		paramsOutstandingDeduction                        int
+		paramsOutstandingAmount                           int
+		mockReduceLoanOutstandingAmountTxErr              error
+		paramsLoanPaymentIds                              []int
+		mockUpdateLoanPaymentStatusPaidTxErr              error
+		mockCommitErr                                     error
+		mockGetLoanResponse                               psql.Loan
+		mockGetLoanErr                                    error
+		want                                              psql.Loan
+		wantErr                                           bool
+	}{
+		{
+			name:      "success case, single payment",
+			mockStore: storeMocks.NewMockStore(t),
+			id:        1,
+			amount:    110000,
+			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
+				Loan:         psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 3900000},
+				LoanPayments: []psql.LoanPayment{{Id: 1, LoanId: 1, Amount: 110000}},
+			},
+			paramsOutstandingDeduction: 100000,
+			paramsOutstandingAmount:    3900000,
+			paramsLoanPaymentIds:       []int{1},
+			mockGetLoanResponse:        psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 3800000},
+			want:                       psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 3800000},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := service.NewLoanService(tt.mockStore)
+
+			// Mocking
+			tt.mockStore.On("GetLoanAndLoanPaymentsByStatusDueDate", mock.Anything, tt.id, psql.LoanPaymentStatusScheduled, mock.Anything, true).Return(
+				tt.mockGetLoanAndLoanPaymentsByStatusDueDateResponse.Loan,
+				tt.mockGetLoanAndLoanPaymentsByStatusDueDateResponse.LoanPayments,
+				tt.mockGetLoanAndLoanPaymentsByStatusDueDateErr)
+
+			if tt.mockGetLoanAndLoanPaymentsByStatusDueDateErr == nil && !tt.flagInvalidAmount {
+				tt.mockStore.On("Begin", mock.Anything).Return(nil, tt.mockBeginErr)
+				tt.mockStore.On("Rollback", mock.Anything, mock.Anything).Return(nil)
+
+				if tt.mockBeginErr == nil {
+					if tt.paramsOutstandingDeduction == tt.paramsOutstandingAmount {
+						tt.mockStore.On("ReduceLoanOutstandingAmountStatusPaidTx", mock.Anything, mock.Anything, tt.paramsOutstandingDeduction, tt.id, tt.paramsOutstandingAmount).
+							Return(tt.mockReduceLoanOutstandingAmountTxErr)
+					} else {
+						tt.mockStore.On("ReduceLoanOutstandingAmountTx", mock.Anything, mock.Anything, tt.paramsOutstandingDeduction, tt.id, tt.paramsOutstandingAmount).
+							Return(tt.mockReduceLoanOutstandingAmountTxErr)
+					}
+
+					if tt.mockReduceLoanOutstandingAmountTxErr == nil {
+						tt.mockStore.On("UpdateLoanPaymentStatusPaidTx", mock.Anything, mock.Anything, tt.paramsLoanPaymentIds).
+							Return(tt.mockUpdateLoanPaymentStatusPaidTxErr)
+
+						if tt.mockUpdateLoanPaymentStatusPaidTxErr == nil {
+							tt.mockStore.On("Commit", mock.Anything, mock.Anything).Return(tt.mockBeginErr)
+
+							if tt.mockBeginErr == nil {
+								tt.mockStore.On("GetLoan", mock.Anything, tt.id).Return(tt.mockGetLoanResponse, tt.mockGetLoanErr)
+							}
+						}
+					}
+				}
+			}
+
+			//Call
+			got, gotErr := l.PayLoanV2(context.Background(), tt.id, tt.amount)
+			if tt.wantErr {
+				assert.Error(t, gotErr)
+			} else {
+				assert.NoError(t, gotErr)
+				assert.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
