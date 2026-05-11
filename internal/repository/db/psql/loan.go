@@ -106,33 +106,6 @@ func (p *Psql) GetLoanByUserIdAndStatus(ctx context.Context, userId int, status 
 	return loans, nil
 }
 
-func (p *Psql) PayLoan(ctx context.Context, loanId int, loanPaymentIds []int, outstandingDeduction int, outstandingAmount int) error {
-	tx, err := p.pool.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
-
-	if outstandingDeduction == outstandingAmount {
-		_, err = tx.Exec(ctx, "UPDATE loans SET outstanding_amount = outstanding_amount - $1, status = 1, updated_at = NOW() WHERE id = $2 AND outstanding_amount = $3", outstandingDeduction, loanId, outstandingAmount)
-	} else {
-		_, err = tx.Exec(ctx, "UPDATE loans SET outstanding_amount = outstanding_amount - $1, updated_at = NOW() WHERE id = $2 AND outstanding_amount = $3", outstandingDeduction, loanId, outstandingAmount)
-	}
-	if err != nil {
-		return err
-	}
-
-	for _, lpId := range loanPaymentIds { // Optimize later by building single query
-		_, err = tx.Exec(ctx, "UPDATE loan_payments SET status = 1, paid_at = NOW(), updated_at = NOW() WHERE id = $1 AND status=0", lpId)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = tx.Commit(ctx)
-	return err
-}
-
 func (p *Psql) ReduceLoanOutstandingAmountTx(ctx context.Context, tx pgx.Tx, outstandingDeduction, loanId, previousOutstanding int) error {
 	_, err := tx.Exec(ctx, "UPDATE loans SET outstanding_amount = outstanding_amount - $1, updated_at = NOW() WHERE id = $2 AND outstanding_amount = $3",
 		outstandingDeduction, loanId, previousOutstanding)
