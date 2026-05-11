@@ -87,9 +87,8 @@ func (l *LoanService) PayLoanV2(ctx context.Context, id int, amount int) (psql.L
 	if amount != totalUnpaid {
 		return psql.Loan{}, fmt.Errorf("Invalid payment amount, payment amount must be %d", totalUnpaid)
 	}
-	slices.Sort(loanPaymentIds)
 
-	// Make Payment
+	// Begin transaction for the payment
 	tx, err := l.store.Begin(ctx)
 	if err != nil {
 		return psql.Loan{}, err
