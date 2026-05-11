@@ -14,6 +14,9 @@ template-data:
   mock-build-tags: mock
 template-schema: '{{.Template}}.schema.json'
 packages:
+  gangsaur.com/billing-exercise/internal/handler:
+    config:
+      all: true
   gangsaur.com/billing-exercise/internal/service:
     config:
       all: true

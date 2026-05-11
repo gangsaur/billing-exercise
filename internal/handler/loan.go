@@ -1,12 +1,12 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
 
 	"gangsaur.com/billing-exercise/internal/repository/db/psql"
-	"gangsaur.com/billing-exercise/internal/service"
 )
 
 // Request
@@ -49,13 +49,20 @@ func toLoanResponse(loan psql.Loan) LoanResponse {
 	}
 }
 
+// Interface
+
+type LoanService interface {
+	GetLoan(ctx context.Context, id int) (psql.Loan, error)
+	PayLoan(ctx context.Context, id int, amount int) (psql.Loan, error)
+}
+
 // Handler
 
 type LoanHandler struct {
-	loanService *service.LoanService
+	loanService LoanService
 }
 
-func NewLoanHandler(l *service.LoanService) *LoanHandler {
+func NewLoanHandler(l LoanService) *LoanHandler {
 	return &LoanHandler{
 		loanService: l,
 	}

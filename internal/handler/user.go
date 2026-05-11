@@ -1,13 +1,15 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
 
 	"gangsaur.com/billing-exercise/internal/repository/db/psql"
-	"gangsaur.com/billing-exercise/internal/service"
 )
+
+// Response
 
 type UserResponseDelinquent struct {
 	Id         int  `json:"id"`
@@ -21,11 +23,19 @@ func toUserResponseDelinquent(user psql.User, delinquentStatus bool) UserRespons
 	}
 }
 
-type UserHandler struct {
-	userService *service.UserService
+// Interface
+
+type UserService interface {
+	GetUser(ctx context.Context, id int) (psql.User, bool, error)
 }
 
-func NewUserHandler(u *service.UserService) *UserHandler {
+// Handler
+
+type UserHandler struct {
+	userService UserService
+}
+
+func NewUserHandler(u UserService) *UserHandler {
 	return &UserHandler{
 		userService: u,
 	}
