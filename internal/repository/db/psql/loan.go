@@ -38,7 +38,49 @@ func (p *Psql) GetLoan(ctx context.Context, id int) (Loan, error) {
 }
 
 func (p *Psql) GetLoanAndLoanPaymentsByStatusDueDate(ctx context.Context, id int, status int, date time.Time, dueDateBeforeDate bool) (Loan, []LoanPayment, error) {
-	return Loan{}, nil, nil // TODO
+	var q string
+
+	if dueDateBeforeDate {
+		q = `
+			SELECT l.id, l.interest, l.outstanding_amount, lp.id, lp.amount, lp.loan_id FROM loans AS l JOIN loan_payments AS lp ON l.id = lp.loan_id
+			WHERE l.id = $1 AND lp.status = $2 AND lp.due_date < $3;`
+	} else {
+		q = `
+			SELECT l.id, l.interest, l.outstanding_amount, lp.id, lp.amount, lp.loan_id FROM loans AS l JOIN loan_payments AS lp ON l.id = lp.loan_id
+			WHERE l.id = $1 AND lp.status = $2 AND lp.due_date > $3;`
+
+	}
+
+	rows, err := p.pool.Query(ctx, q, id, status, date)
+	if err != nil {
+		return Loan{}, []LoanPayment{}, err
+	}
+	defer rows.Close()
+
+	// Scan 1st row for loan information, then scan the rest
+	var loanPayments []LoanPayment
+	var loan Loan
+	if rows.Next() {
+		var loanPayment LoanPayment
+		err := rows.Scan(&loan.Id, &loan.InterestRate, &loan.OutstandingAmount, &loanPayment.Id, &loanPayment.Amount, &loanPayment.LoanId)
+		if err != nil {
+			return Loan{}, []LoanPayment{}, err
+		}
+
+		loanPayments = append(loanPayments, loanPayment)
+	}
+
+	for rows.Next() {
+		var loanPayment LoanPayment
+		err := rows.Scan(nil, nil, nil, &loanPayment.Id, &loanPayment.Amount, &loanPayment.LoanId)
+		if err != nil {
+			return Loan{}, []LoanPayment{}, err
+		}
+
+		loanPayments = append(loanPayments, loanPayment)
+	}
+
+	return loan, loanPayments, nil
 }
 
 func (p *Psql) GetLoanByUserIdAndStatus(ctx context.Context, userId int, status int) ([]Loan, error) {
