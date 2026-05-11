@@ -28,7 +28,7 @@ func (l *LoanService) GetLoan(ctx context.Context, id int) (psql.Loan, error) {
 }
 
 func (l *LoanService) PayLoan(ctx context.Context, id int, amount int) (psql.Loan, error) {
-	// Need centralized lock or payload needs to specify loanPaymentIds to handle race condition
+	// TODO: Ideally need centralized lock or payload needs to specify loanPaymentIds to handle race condition
 
 	// Get Loan and their LoanPayments
 	loan, unpaidLoanPayments, err := l.store.GetLoanAndLoanPaymentsByStatusDueDate(ctx, id, psql.LoanPaymentStatusScheduled, time.Now().AddDate(0, 0, 7), true)

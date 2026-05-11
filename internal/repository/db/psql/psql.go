@@ -30,7 +30,7 @@ func (p *Psql) CloseConnection() {
 }
 
 // Transaction
-// Still leaky since we return the pgx.Tx, adjust later
+// TODO: Still leaky since we return the pgx.Tx, adjust later
 
 func (p *Psql) Begin(ctx context.Context) (pgx.Tx, error) {
 	return p.pool.Begin(ctx)
