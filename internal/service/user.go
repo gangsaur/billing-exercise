@@ -21,7 +21,7 @@ func NewUserService(u Store) *UserService {
 
 func (u *UserService) GetUser(ctx context.Context, id int) (psql.User, bool, error) {
 	// Get user data
-	userData, err := u.store.GetUser(ctx, id)
+	user, err := u.store.GetUser(ctx, id)
 	if err != nil {
 		return psql.User{}, false, err
 	}
@@ -54,5 +54,5 @@ func (u *UserService) GetUser(ctx context.Context, id int) (psql.User, bool, err
 		}
 	}
 
-	return userData, delinquentStatus, nil
+	return user, delinquentStatus, nil
 }

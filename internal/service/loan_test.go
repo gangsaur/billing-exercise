@@ -79,20 +79,28 @@ func TestLoanService_GetLoan(t *testing.T) {
 }
 
 func TestLoanService_PayLoan(t *testing.T) {
+	type loanAndLoanPayments struct {
+		Loan         psql.Loan
+		LoanPayments []psql.LoanPayment
+	}
+
 	tests := []struct {
 		name                                              string
 		mockStore                                         *storeMocks.MockStore
 		id                                                int
 		amount                                            int
-		mockGetLoanResponse                               []psql.Loan
-		mockGetLoanErr                                    []error
-		mockGetLoanPaymentsByLoanIdsStatusDueDateResponse []psql.LoanPayment
-		mockGetLoanPaymentsByLoanIdsStatusDueDateErr      error
+		mockGetLoanAndLoanPaymentsByStatusDueDateResponse loanAndLoanPayments
+		mockGetLoanAndLoanPaymentsByStatusDueDateErr      error
 		flagInvalidAmount                                 bool
-		paramsLoanPaymentIds                              []int
+		mockBeginErr                                      error
 		paramsOutstandingDeduction                        int
 		paramsOutstandingAmount                           int
-		mockPayLoanErr                                    error
+		mockReduceLoanOutstandingAmountTxErr              error
+		paramsLoanPaymentIds                              []int
+		mockUpdateLoanPaymentStatusPaidTxErr              error
+		mockCommitErr                                     error
+		mockGetLoanResponse                               psql.Loan
+		mockGetLoanErr                                    error
 		want                                              psql.Loan
 		wantErr                                           bool
 	}{
@@ -101,158 +109,159 @@ func TestLoanService_PayLoan(t *testing.T) {
 			mockStore: storeMocks.NewMockStore(t),
 			id:        1,
 			amount:    110000,
-			mockGetLoanResponse: []psql.Loan{
-				{
-					Id:                1,
-					InterestRate:      10,
-					OutstandingAmount: 3900000,
-				},
-				{
-					Id:                1,
-					InterestRate:      10,
-					OutstandingAmount: 3800000,
-				},
+			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
+				Loan:         psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 3900000},
+				LoanPayments: []psql.LoanPayment{{Id: 1, LoanId: 1, Amount: 110000}},
 			},
-			mockGetLoanErr: []error{nil, nil},
-			mockGetLoanPaymentsByLoanIdsStatusDueDateResponse: []psql.LoanPayment{
-				{Id: 1, LoanId: 1, Amount: 110000},
-			},
-			paramsLoanPaymentIds:       []int{1},
 			paramsOutstandingDeduction: 100000,
 			paramsOutstandingAmount:    3900000,
-			want: psql.Loan{
-				Id:                1,
-				InterestRate:      10,
-				OutstandingAmount: 3800000,
-			},
+			paramsLoanPaymentIds:       []int{1},
+			mockGetLoanResponse:        psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 3800000},
+			want:                       psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 3800000},
 		},
 		{
-			name:      "success case, multiple payment",
+			name:      "success case, multiple payments",
 			mockStore: storeMocks.NewMockStore(t),
 			id:        1,
-			amount:    315000,
-			mockGetLoanResponse: []psql.Loan{
-				{
-					Id:                1,
-					InterestRate:      5,
-					OutstandingAmount: 3800000,
-				},
-				{
-					Id:                1,
-					InterestRate:      5,
-					OutstandingAmount: 3500000,
+			amount:    330000,
+			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
+				Loan: psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 300000},
+				LoanPayments: []psql.LoanPayment{
+					{Id: 1, LoanId: 1, Amount: 110000},
+					{Id: 99, LoanId: 1, Amount: 110000},
+					{Id: 2, LoanId: 1, Amount: 110000},
 				},
 			},
-			mockGetLoanErr: []error{nil, nil},
-			mockGetLoanPaymentsByLoanIdsStatusDueDateResponse: []psql.LoanPayment{
-				{Id: 33, LoanId: 1, Amount: 105000},
-				{Id: 34, LoanId: 1, Amount: 105000},
-				{Id: 35, LoanId: 1, Amount: 105000},
-			},
-			paramsLoanPaymentIds:       []int{33, 34, 35},
 			paramsOutstandingDeduction: 300000,
-			paramsOutstandingAmount:    3800000,
-			want: psql.Loan{
-				Id:                1,
-				InterestRate:      5,
-				OutstandingAmount: 3500000,
-			},
+			paramsOutstandingAmount:    300000,
+			paramsLoanPaymentIds:       []int{1, 99, 2},
+			mockGetLoanResponse:        psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 3800000},
+			want:                       psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 3800000},
 		},
 		{
-			name:      "error case, 1st GetLoan error",
+			name:      "error case, GetLoanAndLoanPaymentsByStatusDueDate error",
 			mockStore: storeMocks.NewMockStore(t),
 			id:        1,
-			amount:    1000,
-			mockGetLoanResponse: []psql.Loan{
-				{},
-				{},
-			},
-			mockGetLoanErr: []error{errors.New("GetLoan error"), nil},
-			wantErr:        true,
-		},
-		{
-			name:      "error case, GetLoanPaymentsByLoanIdsStatusDueDate error",
-			mockStore: storeMocks.NewMockStore(t),
-			id:        1,
-			amount:    200000,
-			mockGetLoanResponse: []psql.Loan{
-				{
-					Id:                1,
-					InterestRate:      0,
-					OutstandingAmount: 3500000,
-				},
-				{},
-			},
-			mockGetLoanErr: []error{nil, nil},
-			mockGetLoanPaymentsByLoanIdsStatusDueDateErr: errors.New("GetLoanPaymentsByLoanIdsStatusDueDate error"),
+			amount:    220000,
+			mockGetLoanAndLoanPaymentsByStatusDueDateErr: errors.New("GetLoanAndLoanPaymentsByStatusDueDate error"),
 			wantErr: true,
 		},
 		{
-			name:      "error case, invalid payment amount",
+			name:      "error case, invalid amount",
 			mockStore: storeMocks.NewMockStore(t),
 			id:        1,
-			amount:    500000,
-			mockGetLoanResponse: []psql.Loan{
-				{
-					Id:                1,
-					InterestRate:      0,
-					OutstandingAmount: 3500000,
+			amount:    550000,
+			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
+				Loan: psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 300000},
+				LoanPayments: []psql.LoanPayment{
+					{Id: 1000, LoanId: 1, Amount: 110000},
+					{Id: 99, LoanId: 1, Amount: 110000},
 				},
-				{},
-			},
-			mockGetLoanErr: []error{nil, nil},
-			mockGetLoanPaymentsByLoanIdsStatusDueDateResponse: []psql.LoanPayment{
-				{Id: 35, LoanId: 1, Amount: 100000},
-				{Id: 36, LoanId: 1, Amount: 100000},
 			},
 			flagInvalidAmount: true,
 			wantErr:           true,
 		},
 		{
-			name:      "error case, PayLoan error",
+			name:      "error case, Begin error",
 			mockStore: storeMocks.NewMockStore(t),
 			id:        1,
-			amount:    200000,
-			mockGetLoanResponse: []psql.Loan{
-				{
-					Id:                1,
-					InterestRate:      0,
-					OutstandingAmount: 3800000,
+			amount:    220000,
+			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
+				Loan: psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 300000},
+				LoanPayments: []psql.LoanPayment{
+					{Id: 1000, LoanId: 1, Amount: 110000},
+					{Id: 99, LoanId: 1, Amount: 110000},
 				},
-				{},
 			},
-			mockGetLoanErr: []error{nil, nil},
-			mockGetLoanPaymentsByLoanIdsStatusDueDateResponse: []psql.LoanPayment{
-				{Id: 35, LoanId: 1, Amount: 100000},
-				{Id: 36, LoanId: 1, Amount: 100000},
+			mockBeginErr: errors.New("Begin error"),
+			wantErr:      true,
+		},
+		{
+			name:      "error case, ReduceLoanOutstandingAmountTx error",
+			mockStore: storeMocks.NewMockStore(t),
+			id:        1,
+			amount:    220000,
+			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
+				Loan: psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 300000},
+				LoanPayments: []psql.LoanPayment{
+					{Id: 1000, LoanId: 1, Amount: 110000},
+					{Id: 99, LoanId: 1, Amount: 110000},
+				},
 			},
-			paramsLoanPaymentIds:       []int{35, 36},
+			paramsOutstandingDeduction:           200000,
+			paramsOutstandingAmount:              300000,
+			mockReduceLoanOutstandingAmountTxErr: errors.New("ReduceLoanOutstandingAmountTx error"),
+			wantErr:                              true,
+		},
+		{
+			name:      "error case, ReduceLoanOutstandingAmountStatusPaidTx error",
+			mockStore: storeMocks.NewMockStore(t),
+			id:        1,
+			amount:    220000,
+			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
+				Loan: psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 200000},
+				LoanPayments: []psql.LoanPayment{
+					{Id: 1000, LoanId: 1, Amount: 110000},
+					{Id: 99, LoanId: 1, Amount: 110000},
+				},
+			},
+			paramsOutstandingDeduction:           200000,
+			paramsOutstandingAmount:              200000,
+			mockReduceLoanOutstandingAmountTxErr: errors.New("ReduceLoanOutstandingAmountStatusPaidTx error"),
+			wantErr:                              true,
+		},
+		{
+			name:      "error case, UpdateLoanPaymentStatusPaidTx error",
+			mockStore: storeMocks.NewMockStore(t),
+			id:        1,
+			amount:    220000,
+			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
+				Loan: psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 300000},
+				LoanPayments: []psql.LoanPayment{
+					{Id: 1000, LoanId: 1, Amount: 110000},
+					{Id: 99, LoanId: 1, Amount: 110000},
+				},
+			},
+			paramsOutstandingDeduction:           200000,
+			paramsOutstandingAmount:              300000,
+			paramsLoanPaymentIds:                 []int{1000, 99},
+			mockUpdateLoanPaymentStatusPaidTxErr: errors.New("UpdateLoanPaymentStatusPaidTx error"),
+			wantErr:                              true,
+		},
+		{
+			name:      "error case, Commit error",
+			mockStore: storeMocks.NewMockStore(t),
+			id:        1,
+			amount:    220000,
+			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
+				Loan: psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 300000},
+				LoanPayments: []psql.LoanPayment{
+					{Id: 1000, LoanId: 1, Amount: 110000},
+					{Id: 99, LoanId: 1, Amount: 110000},
+				},
+			},
 			paramsOutstandingDeduction: 200000,
-			paramsOutstandingAmount:    3800000,
-			mockPayLoanErr:             errors.New("PayLoan error"),
+			paramsOutstandingAmount:    300000,
+			paramsLoanPaymentIds:       []int{1000, 99},
+			mockCommitErr:              errors.New("Commit error"),
 			wantErr:                    true,
 		},
 		{
-			name:      "error case, 2nd GetLoan error",
+			name:      "error case, GetLoan error",
 			mockStore: storeMocks.NewMockStore(t),
 			id:        1,
-			amount:    200000,
-			mockGetLoanResponse: []psql.Loan{
-				{
-					Id:                1,
-					InterestRate:      0,
-					OutstandingAmount: 3800000,
+			amount:    220000,
+			mockGetLoanAndLoanPaymentsByStatusDueDateResponse: loanAndLoanPayments{
+				Loan: psql.Loan{Id: 1, InterestRate: 10, OutstandingAmount: 300000},
+				LoanPayments: []psql.LoanPayment{
+					{Id: 1000, LoanId: 1, Amount: 110000},
+					{Id: 99, LoanId: 1, Amount: 110000},
 				},
-				{},
 			},
-			mockGetLoanErr: []error{nil, errors.New("GetLoan error")},
-			mockGetLoanPaymentsByLoanIdsStatusDueDateResponse: []psql.LoanPayment{
-				{Id: 35, LoanId: 1, Amount: 100000},
-				{Id: 36, LoanId: 1, Amount: 100000},
-			},
-			paramsLoanPaymentIds:       []int{35, 36},
 			paramsOutstandingDeduction: 200000,
-			paramsOutstandingAmount:    3800000,
+			paramsOutstandingAmount:    300000,
+			paramsLoanPaymentIds:       []int{1000, 99},
+			mockGetLoanErr:             errors.New("GetLoan error"),
 			wantErr:                    true,
 		},
 	}
@@ -260,19 +269,42 @@ func TestLoanService_PayLoan(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			l := service.NewLoanService(tt.mockStore)
 
-			tt.mockStore.On("GetLoan", mock.Anything, tt.id).Return(tt.mockGetLoanResponse[0], tt.mockGetLoanErr[0]).Once()
-			if tt.mockGetLoanErr[0] == nil {
-				tt.mockStore.On("GetLoanPaymentsByLoanIdsStatusDueDate", mock.Anything, []int{tt.id}, psql.LoanPaymentStatusScheduled, mock.Anything, true).
-					Return(tt.mockGetLoanPaymentsByLoanIdsStatusDueDateResponse, tt.mockGetLoanPaymentsByLoanIdsStatusDueDateErr)
-			}
-			if tt.mockGetLoanErr[0] == nil && tt.mockGetLoanPaymentsByLoanIdsStatusDueDateErr == nil && !tt.flagInvalidAmount {
-				tt.mockStore.On("PayLoan", mock.Anything, tt.id, tt.paramsLoanPaymentIds, tt.paramsOutstandingDeduction, tt.paramsOutstandingAmount).
-					Return(tt.mockPayLoanErr)
-			}
-			if tt.mockGetLoanErr[0] == nil && tt.mockGetLoanPaymentsByLoanIdsStatusDueDateErr == nil && !tt.flagInvalidAmount && tt.mockPayLoanErr == nil {
-				tt.mockStore.On("GetLoan", mock.Anything, tt.id).Return(tt.mockGetLoanResponse[1], tt.mockGetLoanErr[1]).Once()
+			// Mocking
+			tt.mockStore.On("GetLoanAndLoanPaymentsByStatusDueDate", mock.Anything, tt.id, psql.LoanPaymentStatusScheduled, mock.Anything, true).Return(
+				tt.mockGetLoanAndLoanPaymentsByStatusDueDateResponse.Loan,
+				tt.mockGetLoanAndLoanPaymentsByStatusDueDateResponse.LoanPayments,
+				tt.mockGetLoanAndLoanPaymentsByStatusDueDateErr)
+
+			if tt.mockGetLoanAndLoanPaymentsByStatusDueDateErr == nil && !tt.flagInvalidAmount {
+				tt.mockStore.On("Begin", mock.Anything).Return(nil, tt.mockBeginErr)
+
+				if tt.mockBeginErr == nil {
+					tt.mockStore.On("Rollback", mock.Anything, mock.Anything).Return(nil)
+
+					if tt.paramsOutstandingDeduction == tt.paramsOutstandingAmount {
+						tt.mockStore.On("ReduceLoanOutstandingAmountStatusPaidTx", mock.Anything, mock.Anything, tt.paramsOutstandingDeduction, tt.id, tt.paramsOutstandingAmount).
+							Return(tt.mockReduceLoanOutstandingAmountTxErr)
+					} else {
+						tt.mockStore.On("ReduceLoanOutstandingAmountTx", mock.Anything, mock.Anything, tt.paramsOutstandingDeduction, tt.id, tt.paramsOutstandingAmount).
+							Return(tt.mockReduceLoanOutstandingAmountTxErr)
+					}
+
+					if tt.mockReduceLoanOutstandingAmountTxErr == nil {
+						tt.mockStore.On("UpdateLoanPaymentStatusPaidTx", mock.Anything, mock.Anything, tt.paramsLoanPaymentIds).
+							Return(tt.mockUpdateLoanPaymentStatusPaidTxErr)
+
+						if tt.mockUpdateLoanPaymentStatusPaidTxErr == nil {
+							tt.mockStore.On("Commit", mock.Anything, mock.Anything).Return(tt.mockCommitErr)
+
+							if tt.mockCommitErr == nil {
+								tt.mockStore.On("GetLoan", mock.Anything, tt.id).Return(tt.mockGetLoanResponse, tt.mockGetLoanErr)
+							}
+						}
+					}
+				}
 			}
 
+			//Call
 			got, gotErr := l.PayLoan(context.Background(), tt.id, tt.amount)
 			if tt.wantErr {
 				assert.Error(t, gotErr)

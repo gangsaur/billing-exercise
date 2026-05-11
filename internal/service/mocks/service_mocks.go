@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"gangsaur.com/billing-exercise/internal/repository/db/psql"
+	"github.com/jackc/pgx/v5"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -39,6 +40,125 @@ type MockStore_Expecter struct {
 
 func (_m *MockStore) EXPECT() *MockStore_Expecter {
 	return &MockStore_Expecter{mock: &_m.Mock}
+}
+
+// Begin provides a mock function for the type MockStore
+func (_mock *MockStore) Begin(ctx context.Context) (pgx.Tx, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Begin")
+	}
+
+	var r0 pgx.Tx
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) (pgx.Tx, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) pgx.Tx); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(pgx.Tx)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockStore_Begin_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Begin'
+type MockStore_Begin_Call struct {
+	*mock.Call
+}
+
+// Begin is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MockStore_Expecter) Begin(ctx interface{}) *MockStore_Begin_Call {
+	return &MockStore_Begin_Call{Call: _e.mock.On("Begin", ctx)}
+}
+
+func (_c *MockStore_Begin_Call) Run(run func(ctx context.Context)) *MockStore_Begin_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockStore_Begin_Call) Return(tx pgx.Tx, err error) *MockStore_Begin_Call {
+	_c.Call.Return(tx, err)
+	return _c
+}
+
+func (_c *MockStore_Begin_Call) RunAndReturn(run func(ctx context.Context) (pgx.Tx, error)) *MockStore_Begin_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Commit provides a mock function for the type MockStore
+func (_mock *MockStore) Commit(ctx context.Context, tx pgx.Tx) error {
+	ret := _mock.Called(ctx, tx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Commit")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgx.Tx) error); ok {
+		r0 = returnFunc(ctx, tx)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockStore_Commit_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Commit'
+type MockStore_Commit_Call struct {
+	*mock.Call
+}
+
+// Commit is a helper method to define mock.On call
+//   - ctx context.Context
+//   - tx pgx.Tx
+func (_e *MockStore_Expecter) Commit(ctx interface{}, tx interface{}) *MockStore_Commit_Call {
+	return &MockStore_Commit_Call{Call: _e.mock.On("Commit", ctx, tx)}
+}
+
+func (_c *MockStore_Commit_Call) Run(run func(ctx context.Context, tx pgx.Tx)) *MockStore_Commit_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 pgx.Tx
+		if args[1] != nil {
+			arg1 = args[1].(pgx.Tx)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockStore_Commit_Call) Return(err error) *MockStore_Commit_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockStore_Commit_Call) RunAndReturn(run func(ctx context.Context, tx pgx.Tx) error) *MockStore_Commit_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // GetLoan provides a mock function for the type MockStore
@@ -103,6 +223,98 @@ func (_c *MockStore_GetLoan_Call) Return(loan psql.Loan, err error) *MockStore_G
 }
 
 func (_c *MockStore_GetLoan_Call) RunAndReturn(run func(ctx context.Context, id int) (psql.Loan, error)) *MockStore_GetLoan_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetLoanAndLoanPaymentsByStatusDueDate provides a mock function for the type MockStore
+func (_mock *MockStore) GetLoanAndLoanPaymentsByStatusDueDate(ctx context.Context, id int, status int, date time.Time, dueDateBeforeDate bool) (psql.Loan, []psql.LoanPayment, error) {
+	ret := _mock.Called(ctx, id, status, date, dueDateBeforeDate)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLoanAndLoanPaymentsByStatusDueDate")
+	}
+
+	var r0 psql.Loan
+	var r1 []psql.LoanPayment
+	var r2 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, int, time.Time, bool) (psql.Loan, []psql.LoanPayment, error)); ok {
+		return returnFunc(ctx, id, status, date, dueDateBeforeDate)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, int, time.Time, bool) psql.Loan); ok {
+		r0 = returnFunc(ctx, id, status, date, dueDateBeforeDate)
+	} else {
+		r0 = ret.Get(0).(psql.Loan)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int, int, time.Time, bool) []psql.LoanPayment); ok {
+		r1 = returnFunc(ctx, id, status, date, dueDateBeforeDate)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]psql.LoanPayment)
+		}
+	}
+	if returnFunc, ok := ret.Get(2).(func(context.Context, int, int, time.Time, bool) error); ok {
+		r2 = returnFunc(ctx, id, status, date, dueDateBeforeDate)
+	} else {
+		r2 = ret.Error(2)
+	}
+	return r0, r1, r2
+}
+
+// MockStore_GetLoanAndLoanPaymentsByStatusDueDate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLoanAndLoanPaymentsByStatusDueDate'
+type MockStore_GetLoanAndLoanPaymentsByStatusDueDate_Call struct {
+	*mock.Call
+}
+
+// GetLoanAndLoanPaymentsByStatusDueDate is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int
+//   - status int
+//   - date time.Time
+//   - dueDateBeforeDate bool
+func (_e *MockStore_Expecter) GetLoanAndLoanPaymentsByStatusDueDate(ctx interface{}, id interface{}, status interface{}, date interface{}, dueDateBeforeDate interface{}) *MockStore_GetLoanAndLoanPaymentsByStatusDueDate_Call {
+	return &MockStore_GetLoanAndLoanPaymentsByStatusDueDate_Call{Call: _e.mock.On("GetLoanAndLoanPaymentsByStatusDueDate", ctx, id, status, date, dueDateBeforeDate)}
+}
+
+func (_c *MockStore_GetLoanAndLoanPaymentsByStatusDueDate_Call) Run(run func(ctx context.Context, id int, status int, date time.Time, dueDateBeforeDate bool)) *MockStore_GetLoanAndLoanPaymentsByStatusDueDate_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int
+		if args[1] != nil {
+			arg1 = args[1].(int)
+		}
+		var arg2 int
+		if args[2] != nil {
+			arg2 = args[2].(int)
+		}
+		var arg3 time.Time
+		if args[3] != nil {
+			arg3 = args[3].(time.Time)
+		}
+		var arg4 bool
+		if args[4] != nil {
+			arg4 = args[4].(bool)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
+	})
+	return _c
+}
+
+func (_c *MockStore_GetLoanAndLoanPaymentsByStatusDueDate_Call) Return(loan psql.Loan, loanPayments []psql.LoanPayment, err error) *MockStore_GetLoanAndLoanPaymentsByStatusDueDate_Call {
+	_c.Call.Return(loan, loanPayments, err)
+	return _c
+}
+
+func (_c *MockStore_GetLoanAndLoanPaymentsByStatusDueDate_Call) RunAndReturn(run func(ctx context.Context, id int, status int, date time.Time, dueDateBeforeDate bool) (psql.Loan, []psql.LoanPayment, error)) *MockStore_GetLoanAndLoanPaymentsByStatusDueDate_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -333,51 +545,51 @@ func (_c *MockStore_GetUser_Call) RunAndReturn(run func(ctx context.Context, id 
 	return _c
 }
 
-// PayLoan provides a mock function for the type MockStore
-func (_mock *MockStore) PayLoan(ctx context.Context, loanId int, loanPaymentIds []int, outstandingDeduction int, OutstandingAmount int) error {
-	ret := _mock.Called(ctx, loanId, loanPaymentIds, outstandingDeduction, OutstandingAmount)
+// ReduceLoanOutstandingAmountStatusPaidTx provides a mock function for the type MockStore
+func (_mock *MockStore) ReduceLoanOutstandingAmountStatusPaidTx(ctx context.Context, tx pgx.Tx, outstandingDeduction int, loanId int, previousOutstanding int) error {
+	ret := _mock.Called(ctx, tx, outstandingDeduction, loanId, previousOutstanding)
 
 	if len(ret) == 0 {
-		panic("no return value specified for PayLoan")
+		panic("no return value specified for ReduceLoanOutstandingAmountStatusPaidTx")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int, []int, int, int) error); ok {
-		r0 = returnFunc(ctx, loanId, loanPaymentIds, outstandingDeduction, OutstandingAmount)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgx.Tx, int, int, int) error); ok {
+		r0 = returnFunc(ctx, tx, outstandingDeduction, loanId, previousOutstanding)
 	} else {
 		r0 = ret.Error(0)
 	}
 	return r0
 }
 
-// MockStore_PayLoan_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PayLoan'
-type MockStore_PayLoan_Call struct {
+// MockStore_ReduceLoanOutstandingAmountStatusPaidTx_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ReduceLoanOutstandingAmountStatusPaidTx'
+type MockStore_ReduceLoanOutstandingAmountStatusPaidTx_Call struct {
 	*mock.Call
 }
 
-// PayLoan is a helper method to define mock.On call
+// ReduceLoanOutstandingAmountStatusPaidTx is a helper method to define mock.On call
 //   - ctx context.Context
-//   - loanId int
-//   - loanPaymentIds []int
+//   - tx pgx.Tx
 //   - outstandingDeduction int
-//   - OutstandingAmount int
-func (_e *MockStore_Expecter) PayLoan(ctx interface{}, loanId interface{}, loanPaymentIds interface{}, outstandingDeduction interface{}, OutstandingAmount interface{}) *MockStore_PayLoan_Call {
-	return &MockStore_PayLoan_Call{Call: _e.mock.On("PayLoan", ctx, loanId, loanPaymentIds, outstandingDeduction, OutstandingAmount)}
+//   - loanId int
+//   - previousOutstanding int
+func (_e *MockStore_Expecter) ReduceLoanOutstandingAmountStatusPaidTx(ctx interface{}, tx interface{}, outstandingDeduction interface{}, loanId interface{}, previousOutstanding interface{}) *MockStore_ReduceLoanOutstandingAmountStatusPaidTx_Call {
+	return &MockStore_ReduceLoanOutstandingAmountStatusPaidTx_Call{Call: _e.mock.On("ReduceLoanOutstandingAmountStatusPaidTx", ctx, tx, outstandingDeduction, loanId, previousOutstanding)}
 }
 
-func (_c *MockStore_PayLoan_Call) Run(run func(ctx context.Context, loanId int, loanPaymentIds []int, outstandingDeduction int, OutstandingAmount int)) *MockStore_PayLoan_Call {
+func (_c *MockStore_ReduceLoanOutstandingAmountStatusPaidTx_Call) Run(run func(ctx context.Context, tx pgx.Tx, outstandingDeduction int, loanId int, previousOutstanding int)) *MockStore_ReduceLoanOutstandingAmountStatusPaidTx_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 int
+		var arg1 pgx.Tx
 		if args[1] != nil {
-			arg1 = args[1].(int)
+			arg1 = args[1].(pgx.Tx)
 		}
-		var arg2 []int
+		var arg2 int
 		if args[2] != nil {
-			arg2 = args[2].([]int)
+			arg2 = args[2].(int)
 		}
 		var arg3 int
 		if args[3] != nil {
@@ -398,12 +610,207 @@ func (_c *MockStore_PayLoan_Call) Run(run func(ctx context.Context, loanId int, 
 	return _c
 }
 
-func (_c *MockStore_PayLoan_Call) Return(err error) *MockStore_PayLoan_Call {
+func (_c *MockStore_ReduceLoanOutstandingAmountStatusPaidTx_Call) Return(err error) *MockStore_ReduceLoanOutstandingAmountStatusPaidTx_Call {
 	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *MockStore_PayLoan_Call) RunAndReturn(run func(ctx context.Context, loanId int, loanPaymentIds []int, outstandingDeduction int, OutstandingAmount int) error) *MockStore_PayLoan_Call {
+func (_c *MockStore_ReduceLoanOutstandingAmountStatusPaidTx_Call) RunAndReturn(run func(ctx context.Context, tx pgx.Tx, outstandingDeduction int, loanId int, previousOutstanding int) error) *MockStore_ReduceLoanOutstandingAmountStatusPaidTx_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ReduceLoanOutstandingAmountTx provides a mock function for the type MockStore
+func (_mock *MockStore) ReduceLoanOutstandingAmountTx(ctx context.Context, tx pgx.Tx, outstandingDeduction int, loanId int, previousOutstanding int) error {
+	ret := _mock.Called(ctx, tx, outstandingDeduction, loanId, previousOutstanding)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ReduceLoanOutstandingAmountTx")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgx.Tx, int, int, int) error); ok {
+		r0 = returnFunc(ctx, tx, outstandingDeduction, loanId, previousOutstanding)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockStore_ReduceLoanOutstandingAmountTx_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ReduceLoanOutstandingAmountTx'
+type MockStore_ReduceLoanOutstandingAmountTx_Call struct {
+	*mock.Call
+}
+
+// ReduceLoanOutstandingAmountTx is a helper method to define mock.On call
+//   - ctx context.Context
+//   - tx pgx.Tx
+//   - outstandingDeduction int
+//   - loanId int
+//   - previousOutstanding int
+func (_e *MockStore_Expecter) ReduceLoanOutstandingAmountTx(ctx interface{}, tx interface{}, outstandingDeduction interface{}, loanId interface{}, previousOutstanding interface{}) *MockStore_ReduceLoanOutstandingAmountTx_Call {
+	return &MockStore_ReduceLoanOutstandingAmountTx_Call{Call: _e.mock.On("ReduceLoanOutstandingAmountTx", ctx, tx, outstandingDeduction, loanId, previousOutstanding)}
+}
+
+func (_c *MockStore_ReduceLoanOutstandingAmountTx_Call) Run(run func(ctx context.Context, tx pgx.Tx, outstandingDeduction int, loanId int, previousOutstanding int)) *MockStore_ReduceLoanOutstandingAmountTx_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 pgx.Tx
+		if args[1] != nil {
+			arg1 = args[1].(pgx.Tx)
+		}
+		var arg2 int
+		if args[2] != nil {
+			arg2 = args[2].(int)
+		}
+		var arg3 int
+		if args[3] != nil {
+			arg3 = args[3].(int)
+		}
+		var arg4 int
+		if args[4] != nil {
+			arg4 = args[4].(int)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
+	})
+	return _c
+}
+
+func (_c *MockStore_ReduceLoanOutstandingAmountTx_Call) Return(err error) *MockStore_ReduceLoanOutstandingAmountTx_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockStore_ReduceLoanOutstandingAmountTx_Call) RunAndReturn(run func(ctx context.Context, tx pgx.Tx, outstandingDeduction int, loanId int, previousOutstanding int) error) *MockStore_ReduceLoanOutstandingAmountTx_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Rollback provides a mock function for the type MockStore
+func (_mock *MockStore) Rollback(ctx context.Context, tx pgx.Tx) error {
+	ret := _mock.Called(ctx, tx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Rollback")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgx.Tx) error); ok {
+		r0 = returnFunc(ctx, tx)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockStore_Rollback_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Rollback'
+type MockStore_Rollback_Call struct {
+	*mock.Call
+}
+
+// Rollback is a helper method to define mock.On call
+//   - ctx context.Context
+//   - tx pgx.Tx
+func (_e *MockStore_Expecter) Rollback(ctx interface{}, tx interface{}) *MockStore_Rollback_Call {
+	return &MockStore_Rollback_Call{Call: _e.mock.On("Rollback", ctx, tx)}
+}
+
+func (_c *MockStore_Rollback_Call) Run(run func(ctx context.Context, tx pgx.Tx)) *MockStore_Rollback_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 pgx.Tx
+		if args[1] != nil {
+			arg1 = args[1].(pgx.Tx)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockStore_Rollback_Call) Return(err error) *MockStore_Rollback_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockStore_Rollback_Call) RunAndReturn(run func(ctx context.Context, tx pgx.Tx) error) *MockStore_Rollback_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateLoanPaymentStatusPaidTx provides a mock function for the type MockStore
+func (_mock *MockStore) UpdateLoanPaymentStatusPaidTx(ctx context.Context, tx pgx.Tx, loanPaymentIds []int) error {
+	ret := _mock.Called(ctx, tx, loanPaymentIds)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateLoanPaymentStatusPaidTx")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, pgx.Tx, []int) error); ok {
+		r0 = returnFunc(ctx, tx, loanPaymentIds)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockStore_UpdateLoanPaymentStatusPaidTx_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateLoanPaymentStatusPaidTx'
+type MockStore_UpdateLoanPaymentStatusPaidTx_Call struct {
+	*mock.Call
+}
+
+// UpdateLoanPaymentStatusPaidTx is a helper method to define mock.On call
+//   - ctx context.Context
+//   - tx pgx.Tx
+//   - loanPaymentIds []int
+func (_e *MockStore_Expecter) UpdateLoanPaymentStatusPaidTx(ctx interface{}, tx interface{}, loanPaymentIds interface{}) *MockStore_UpdateLoanPaymentStatusPaidTx_Call {
+	return &MockStore_UpdateLoanPaymentStatusPaidTx_Call{Call: _e.mock.On("UpdateLoanPaymentStatusPaidTx", ctx, tx, loanPaymentIds)}
+}
+
+func (_c *MockStore_UpdateLoanPaymentStatusPaidTx_Call) Run(run func(ctx context.Context, tx pgx.Tx, loanPaymentIds []int)) *MockStore_UpdateLoanPaymentStatusPaidTx_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 pgx.Tx
+		if args[1] != nil {
+			arg1 = args[1].(pgx.Tx)
+		}
+		var arg2 []int
+		if args[2] != nil {
+			arg2 = args[2].([]int)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockStore_UpdateLoanPaymentStatusPaidTx_Call) Return(err error) *MockStore_UpdateLoanPaymentStatusPaidTx_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockStore_UpdateLoanPaymentStatusPaidTx_Call) RunAndReturn(run func(ctx context.Context, tx pgx.Tx, loanPaymentIds []int) error) *MockStore_UpdateLoanPaymentStatusPaidTx_Call {
 	_c.Call.Return(run)
 	return _c
 }
