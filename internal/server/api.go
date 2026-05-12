@@ -87,7 +87,7 @@ func createMux(p *psql.Psql) *http.ServeMux {
 
 	// Loan
 	mux.Handle("GET /loan/{id}", basicChain.ThenFunc(loanHandler.GetLoan()))
-	mux.Handle("GET /loan/{id}/payment", basicChain.ThenFunc(loanHandler.GetLoanAndLoanPayments()))
+	mux.Handle("GET /loan/{id}/payments", basicChain.ThenFunc(loanHandler.GetLoanAndLoanPayments()))
 	mux.Handle("POST /loan/{id}/pay", basicChain.ThenFunc(loanHandler.PayLoan()))
 
 	// User

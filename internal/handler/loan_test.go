@@ -115,6 +115,122 @@ func TestLoanHandler_GetLoan(t *testing.T) {
 	}
 }
 
+func TestLoanHandler_GetLoanAndLoanPayments(t *testing.T) {
+	type mockGetLoanAndLoanPaymentsResponse struct {
+		loan         psql.Loan
+		loanPayments []psql.LoanPayment
+	}
+	sampleTime := time.Now().Round(0)
+
+	tests := []struct {
+		name                               string
+		mockService                        *handler.MockLoanService
+		requestParamsId                    int
+		mockGetLoanAndLoanPaymentsResponse mockGetLoanAndLoanPaymentsResponse
+		mockGetLoanAndLoanPaymentsErr      error
+		wantStatus                         int
+		wantBodyChecker                    func(*testing.T, []byte)
+	}{
+		{
+			name:            "success case",
+			mockService:     handler.NewMockLoanService(t),
+			requestParamsId: 1,
+			mockGetLoanAndLoanPaymentsResponse: mockGetLoanAndLoanPaymentsResponse{
+				loan: psql.Loan{
+					Id:                1,
+					Duration:          50,
+					PrincipalAmount:   5000000,
+					OutstandingAmount: 200000,
+					Status:            0,
+					InterestRate:      10.0,
+					UserId:            1,
+					CreatedAt:         sampleTime,
+					UpdatedAt:         sampleTime,
+				},
+				loanPayments: []psql.LoanPayment{
+					{Id: 1, Period: 1, Amount: 110000, DueDate: sampleTime, Status: psql.LoanPaymentStatusScheduled, LoanId: 1, CreatedAt: sampleTime, UpdatedAt: sampleTime},
+					{Id: 2, Period: 2, Amount: 110000, DueDate: sampleTime, Status: psql.LoanPaymentStatusScheduled, LoanId: 1, CreatedAt: sampleTime, UpdatedAt: sampleTime},
+				},
+			},
+			wantStatus: 200,
+			wantBodyChecker: func(t *testing.T, body []byte) {
+				var loanResponse handler.LoanResponse
+				_ = json.Unmarshal(body, &loanResponse)
+
+				assert.Equal(t, 1, loanResponse.Id)
+				assert.Equal(t, 50, loanResponse.Duration)
+				assert.Equal(t, 5000000, loanResponse.PrincipalAmount)
+				assert.Equal(t, 200000, loanResponse.OutstandingAmount)
+				assert.Equal(t, 0, loanResponse.Status)
+				assert.Equal(t, float32(10), loanResponse.InterestRate)
+				assert.Equal(t, 1, loanResponse.UserId)
+
+				for i, lp := range loanResponse.LoanPayments {
+					assert.Equal(t, i+1, lp.Id)
+					assert.Equal(t, i+1, lp.Period)
+					assert.Equal(t, 110000, lp.Amount)
+					assert.Equal(t, sampleTime, lp.DueDate)
+					assert.Equal(t, psql.LoanPaymentStatusScheduled, lp.Status)
+					assert.Equal(t, 1, lp.LoanId)
+				}
+			},
+		},
+		{
+			name:            "error case, invalid id",
+			mockService:     handler.NewMockLoanService(t),
+			requestParamsId: -1,
+			wantStatus:      500,
+			wantBodyChecker: func(t *testing.T, body []byte) {},
+		},
+		{
+			name:                          "error case, GetLoanAndLoanPayments error",
+			mockService:                   handler.NewMockLoanService(t),
+			requestParamsId:               1,
+			mockGetLoanAndLoanPaymentsErr: errors.New("GetLoanAndLoanPayments error"),
+			wantStatus:                    500,
+			wantBodyChecker:               func(t *testing.T, body []byte) {},
+		},
+		{
+			name:                          "error case, GetLoanAndLoanPayments not found",
+			mockService:                   handler.NewMockLoanService(t),
+			requestParamsId:               1,
+			mockGetLoanAndLoanPaymentsErr: psql.ErrNotFound,
+			wantStatus:                    404,
+			wantBodyChecker:               func(t *testing.T, body []byte) {},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := handler.NewLoanHandler(tt.mockService)
+
+			// Construct test request and setup mocks
+			requestParamsIdStr := strconv.Itoa(tt.requestParamsId)
+			r := httptest.NewRequest("GET", fmt.Sprintf("/loan/%s/payments", requestParamsIdStr), nil)
+
+			if tt.requestParamsId != -1 {
+				r.SetPathValue("id", requestParamsIdStr)
+				tt.mockService.On("GetLoanAndLoanPayments", mock.Anything, tt.requestParamsId).
+					Return(tt.mockGetLoanAndLoanPaymentsResponse.loan, tt.mockGetLoanAndLoanPaymentsResponse.loanPayments, tt.mockGetLoanAndLoanPaymentsErr)
+			} else {
+				r.SetPathValue("id", "invalid request parameters id")
+			}
+
+			w := httptest.NewRecorder()
+
+			// Call the handlerFunc
+			l.GetLoanAndLoanPayments()(w, r)
+
+			// Check the result
+			res := w.Result()
+			body, _ := io.ReadAll(res.Body)
+			res.Body.Close()
+
+			assert.Equal(t, tt.wantStatus, res.StatusCode)
+			tt.wantBodyChecker(t, bytes.TrimSpace(body))
+		})
+	}
+}
+
 func TestLoanHandler_PayLoan(t *testing.T) {
 	sampleTime := time.Now()
 
