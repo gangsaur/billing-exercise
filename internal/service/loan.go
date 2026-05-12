@@ -27,6 +27,15 @@ func (l *LoanService) GetLoan(ctx context.Context, id int) (psql.Loan, error) {
 	return loan, nil
 }
 
+func (l *LoanService) GetLoanAndLoanPayments(ctx context.Context, id int) (psql.Loan, []psql.LoanPayment, error) {
+	loan, loanPayments, err := l.store.GetLoanAndLoanPayments(ctx, id)
+	if err != nil {
+		return psql.Loan{}, nil, err
+	}
+
+	return loan, loanPayments, nil
+}
+
 func (l *LoanService) PayLoan(ctx context.Context, id int, amount int) (psql.Loan, error) {
 	// TODO: Ideally need centralized lock or payload needs to specify loanPaymentIds to handle race condition
 

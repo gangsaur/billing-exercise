@@ -11,6 +11,7 @@ import (
 type Store interface {
 	GetLoan(ctx context.Context, id int) (psql.Loan, error)
 	GetLoanByUserIdAndStatus(ctx context.Context, userId int, status int) ([]psql.Loan, error)
+	GetLoanAndLoanPayments(ctx context.Context, id int) (psql.Loan, []psql.LoanPayment, error)
 	GetLoanAndLoanPaymentsByStatusDueDate(ctx context.Context, id int, status int, date time.Time, dueDateBeforeDate bool) (psql.Loan, []psql.LoanPayment, error)
 
 	GetLoanPaymentsByLoanIdsStatusDueDate(ctx context.Context, loandIds []int, status int, date time.Time, dueDateBeforeDate bool) ([]psql.LoanPayment, error)

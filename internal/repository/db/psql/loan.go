@@ -2,6 +2,7 @@ package psql
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 
@@ -24,10 +25,10 @@ type Loan struct {
 }
 
 func (p *Psql) GetLoan(ctx context.Context, id int) (Loan, error) {
-	sql := "SELECT id, duration, principal_amount, outstanding_amount, status, interest, user_id, created_at, updated_at FROM loans WHERE id = $1"
+	q := "SELECT id, duration, principal_amount, outstanding_amount, status, interest, user_id, created_at, updated_at FROM loans WHERE id = $1"
 
 	var loan Loan
-	err := p.pool.QueryRow(ctx, sql, id).Scan(
+	err := p.pool.QueryRow(ctx, q, id).Scan(
 		&loan.Id, &loan.Duration, &loan.PrincipalAmount, &loan.OutstandingAmount, &loan.Status, &loan.InterestRate, &loan.UserId, &loan.CreatedAt, &loan.UpdatedAt)
 
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -35,6 +36,61 @@ func (p *Psql) GetLoan(ctx context.Context, id int) (Loan, error) {
 	}
 
 	return loan, err
+}
+
+func (p *Psql) GetLoanAndLoanPayments(ctx context.Context, id int) (Loan, []LoanPayment, error) {
+	q := `
+		SELECT l.id, l.duration, l.principal_amount, l.outstanding_amount, l.status, l.interest, l.user_id, l.created_at, l.updated_at,
+		lp.id, lp.period, lp.amount, lp.due_date, lp.paid_at, lp.status, lp.loan_id, lp.created_at, lp.updated_at FROM loans AS l JOIN loan_payments AS lp
+		ON l.id = lp.loan_id WHERE l.id = $1;`
+
+	rows, err := p.pool.Query(ctx, q, id)
+	if err != nil {
+		return Loan{}, []LoanPayment{}, err
+	}
+	defer rows.Close()
+
+	// Scan 1st row for loan information, then scan the rest
+	var loanPayments []LoanPayment
+	var loan Loan
+	if rows.Next() {
+		var loanPayment LoanPayment
+		var paidAt sql.NullTime
+
+		err := rows.Scan(&loan.Id, &loan.Duration, &loan.PrincipalAmount, &loan.OutstandingAmount, &loan.Status,
+			&loan.InterestRate, &loan.UserId, &loan.CreatedAt, &loan.UpdatedAt, &loanPayment.Id, &loanPayment.Period,
+			&loanPayment.Amount, &loanPayment.DueDate, &paidAt, &loanPayment.Status, &loanPayment.LoanId,
+			&loanPayment.CreatedAt, &loanPayment.UpdatedAt)
+		if err != nil {
+			return Loan{}, []LoanPayment{}, err
+		}
+
+		if paidAt.Valid {
+			loanPayment.PaidAt = paidAt.Time
+		}
+
+		loanPayments = append(loanPayments, loanPayment)
+	}
+
+	for rows.Next() {
+		var loanPayment LoanPayment
+		var paidAt sql.NullTime
+
+		err := rows.Scan(nil, nil, nil, nil, nil, nil, nil, nil, nil, &loanPayment.Id, &loanPayment.Period,
+			&loanPayment.Amount, &loanPayment.DueDate, &paidAt, &loanPayment.Status, &loanPayment.LoanId,
+			&loanPayment.CreatedAt, &loanPayment.UpdatedAt)
+		if err != nil {
+			return Loan{}, []LoanPayment{}, err
+		}
+
+		if paidAt.Valid {
+			loanPayment.PaidAt = paidAt.Time
+		}
+
+		loanPayments = append(loanPayments, loanPayment)
+	}
+
+	return loan, loanPayments, nil
 }
 
 func (p *Psql) GetLoanAndLoanPaymentsByStatusDueDate(ctx context.Context, id int, status int, date time.Time, dueDateBeforeDate bool) (Loan, []LoanPayment, error) {
@@ -84,9 +140,9 @@ func (p *Psql) GetLoanAndLoanPaymentsByStatusDueDate(ctx context.Context, id int
 }
 
 func (p *Psql) GetLoanByUserIdAndStatus(ctx context.Context, userId int, status int) ([]Loan, error) {
-	sql := "SELECT id, duration, principal_amount, outstanding_amount, status, interest, user_id, created_at, updated_at FROM loans WHERE user_id = $1 AND status = $2"
+	q := "SELECT id, duration, principal_amount, outstanding_amount, status, interest, user_id, created_at, updated_at FROM loans WHERE user_id = $1 AND status = $2"
 
-	rows, err := p.pool.Query(ctx, sql, userId, status)
+	rows, err := p.pool.Query(ctx, q, userId, status)
 	if err != nil {
 		return []Loan{}, err
 	}
