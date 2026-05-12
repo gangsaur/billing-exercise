@@ -72,13 +72,13 @@ func toLoanResponseWithLoanPayments(loan psql.Loan, loanPayments []psql.LoanPaym
 }
 
 type LoanPaymentResponse struct {
-	Id      int
-	Period  int
-	Amount  int
-	DueDate time.Time
-	PaidAt  time.Time
-	Status  int
-	LoanId  int
+	Id      int       `json:"id"`
+	Period  int       `json:"period"`
+	Amount  int       `json:"amount"`
+	DueDate time.Time `json:"due_date"`
+	PaidAt  time.Time `json:"paid_at,omitzero"`
+	Status  int       `json:"status"`
+	LoanId  int       `json:"loan_id"`
 }
 
 func toLoanPaymentResponse(loanPayment psql.LoanPayment) LoanPaymentResponse {
