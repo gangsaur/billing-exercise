@@ -60,6 +60,7 @@ func TestLoanService_GetLoan(t *testing.T) {
 			wantErr:        true,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := service.NewLoanService(tt.mockStore)
@@ -72,6 +73,88 @@ func TestLoanService_GetLoan(t *testing.T) {
 			} else {
 				assert.NoError(t, gotErr)
 				assert.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func TestLoanService_GetLoanAndLoanPayments(t *testing.T) {
+	type GetLoanAndLoanPaymentsResponse struct {
+		loan         psql.Loan
+		loanPayments []psql.LoanPayment
+	}
+	sampleTime := time.Now()
+
+	tests := []struct {
+		name                               string
+		mockStore                          *service.MockStore
+		id                                 int
+		mockGetLoanAndLoanPaymentsResponse GetLoanAndLoanPaymentsResponse
+		mockGetLoanAndLoanPaymentsErr      error
+		wantLoan                           psql.Loan
+		wantLoanPayments                   []psql.LoanPayment
+		wantErr                            bool
+	}{
+		{
+			name:      "success case",
+			id:        1,
+			mockStore: service.NewMockStore(t),
+			mockGetLoanAndLoanPaymentsResponse: GetLoanAndLoanPaymentsResponse{
+				loan: psql.Loan{
+					Id:                1,
+					Duration:          50,
+					PrincipalAmount:   5000000,
+					OutstandingAmount: 5000000,
+					Status:            0,
+					InterestRate:      10,
+					UserId:            1,
+					CreatedAt:         sampleTime,
+					UpdatedAt:         sampleTime,
+				},
+				loanPayments: []psql.LoanPayment{
+					{Id: 1, Period: 1, Amount: 110000, DueDate: sampleTime, Status: psql.LoanPaymentStatusScheduled, LoanId: 1, CreatedAt: sampleTime, UpdatedAt: sampleTime},
+					{Id: 2, Period: 2, Amount: 110000, DueDate: sampleTime, Status: psql.LoanPaymentStatusScheduled, LoanId: 1, CreatedAt: sampleTime, UpdatedAt: sampleTime},
+				},
+			},
+			wantLoan: psql.Loan{
+				Id:                1,
+				Duration:          50,
+				PrincipalAmount:   5000000,
+				OutstandingAmount: 5000000,
+				Status:            0,
+				InterestRate:      10,
+				UserId:            1,
+				CreatedAt:         sampleTime,
+				UpdatedAt:         sampleTime,
+			},
+			wantLoanPayments: []psql.LoanPayment{
+				{Id: 1, Period: 1, Amount: 110000, DueDate: sampleTime, Status: psql.LoanPaymentStatusScheduled, LoanId: 1, CreatedAt: sampleTime, UpdatedAt: sampleTime},
+				{Id: 2, Period: 2, Amount: 110000, DueDate: sampleTime, Status: psql.LoanPaymentStatusScheduled, LoanId: 1, CreatedAt: sampleTime, UpdatedAt: sampleTime},
+			},
+		},
+		{
+			name:                          "error case, GetLoanAndLoanPayments throw error",
+			id:                            2,
+			mockStore:                     service.NewMockStore(t),
+			mockGetLoanAndLoanPaymentsErr: errors.New("GetLoanAndLoanPayments error"),
+			wantErr:                       true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := service.NewLoanService(tt.mockStore)
+
+			tt.mockStore.On("GetLoanAndLoanPayments", mock.Anything, tt.id).
+				Return(tt.mockGetLoanAndLoanPaymentsResponse.loan, tt.mockGetLoanAndLoanPaymentsResponse.loanPayments, tt.mockGetLoanAndLoanPaymentsErr)
+
+			gotLoan, gotLoanPayments, gotErr := l.GetLoanAndLoanPayments(context.Background(), tt.id)
+			if tt.wantErr {
+				assert.Error(t, gotErr)
+			} else {
+				assert.NoError(t, gotErr)
+				assert.Equal(t, tt.wantLoan, gotLoan)
+				assert.Equal(t, tt.wantLoanPayments, gotLoanPayments)
 			}
 		})
 	}
@@ -264,6 +347,7 @@ func TestLoanService_PayLoan(t *testing.T) {
 			wantErr:                    true,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := service.NewLoanService(tt.mockStore)

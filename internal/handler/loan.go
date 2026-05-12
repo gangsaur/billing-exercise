@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"gangsaur.com/billing-exercise/internal/repository/db/psql"
 )
@@ -35,6 +36,8 @@ type LoanResponse struct {
 	Status            int     `json:"status"`
 	InterestRate      float32 `json:"interest"`
 	UserId            int     `json:"user_id"`
+
+	LoanPayments []LoanPaymentResponse `json:"loan_payments,omitempty"`
 }
 
 func toLoanResponse(loan psql.Loan) LoanResponse {
@@ -49,10 +52,52 @@ func toLoanResponse(loan psql.Loan) LoanResponse {
 	}
 }
 
+func toLoanResponseWithLoanPayments(loan psql.Loan, loanPayments []psql.LoanPayment) LoanResponse {
+	loanPaymentResponses := make([]LoanPaymentResponse, 0, len(loanPayments))
+	for _, lp := range loanPayments {
+		loanPaymentResponses = append(loanPaymentResponses, toLoanPaymentResponse(lp))
+	}
+
+	return LoanResponse{
+		Id:                loan.Id,
+		Duration:          loan.Duration,
+		PrincipalAmount:   loan.PrincipalAmount,
+		OutstandingAmount: loan.OutstandingAmount,
+		Status:            loan.Status,
+		InterestRate:      loan.InterestRate,
+		UserId:            loan.UserId,
+
+		LoanPayments: loanPaymentResponses,
+	}
+}
+
+type LoanPaymentResponse struct {
+	Id      int
+	Period  int
+	Amount  int
+	DueDate time.Time
+	PaidAt  time.Time
+	Status  int
+	LoanId  int
+}
+
+func toLoanPaymentResponse(loanPayment psql.LoanPayment) LoanPaymentResponse {
+	return LoanPaymentResponse{
+		Id:      loanPayment.Id,
+		Period:  loanPayment.Period,
+		Amount:  loanPayment.Amount,
+		DueDate: loanPayment.DueDate,
+		PaidAt:  loanPayment.PaidAt,
+		Status:  loanPayment.Status,
+		LoanId:  loanPayment.LoanId,
+	}
+}
+
 // Interface
 
 type LoanService interface {
 	GetLoan(ctx context.Context, id int) (psql.Loan, error)
+	GetLoanAndLoanPayments(ctx context.Context, id int) (psql.Loan, []psql.LoanPayment, error)
 	PayLoan(ctx context.Context, id int, amount int) (psql.Loan, error)
 }
 
@@ -83,6 +128,30 @@ func (l *LoanHandler) GetLoan() http.HandlerFunc {
 		}
 
 		res, err := json.Marshal(toLoanResponse(loan))
+		if err != nil {
+			WriteErrorResponse(r.Context(), w, r, err)
+			return
+		}
+
+		w.Write(res)
+	}
+}
+
+func (l *LoanHandler) GetLoanAndLoanPayments() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.Atoi(r.PathValue("id"))
+		if err != nil {
+			WriteErrorResponse(r.Context(), w, r, err)
+			return
+		}
+
+		loan, loanPayments, err := l.loanService.GetLoanAndLoanPayments(r.Context(), id)
+		if err != nil {
+			WriteErrorResponse(r.Context(), w, r, err)
+			return
+		}
+
+		res, err := json.Marshal(toLoanResponseWithLoanPayments(loan, loanPayments))
 		if err != nil {
 			WriteErrorResponse(r.Context(), w, r, err)
 			return

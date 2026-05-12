@@ -106,6 +106,80 @@ func (_c *MockLoanService_GetLoan_Call) RunAndReturn(run func(ctx context.Contex
 	return _c
 }
 
+// GetLoanAndLoanPayments provides a mock function for the type MockLoanService
+func (_mock *MockLoanService) GetLoanAndLoanPayments(ctx context.Context, id int) (psql.Loan, []psql.LoanPayment, error) {
+	ret := _mock.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLoanAndLoanPayments")
+	}
+
+	var r0 psql.Loan
+	var r1 []psql.LoanPayment
+	var r2 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int) (psql.Loan, []psql.LoanPayment, error)); ok {
+		return returnFunc(ctx, id)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int) psql.Loan); ok {
+		r0 = returnFunc(ctx, id)
+	} else {
+		r0 = ret.Get(0).(psql.Loan)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int) []psql.LoanPayment); ok {
+		r1 = returnFunc(ctx, id)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]psql.LoanPayment)
+		}
+	}
+	if returnFunc, ok := ret.Get(2).(func(context.Context, int) error); ok {
+		r2 = returnFunc(ctx, id)
+	} else {
+		r2 = ret.Error(2)
+	}
+	return r0, r1, r2
+}
+
+// MockLoanService_GetLoanAndLoanPayments_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLoanAndLoanPayments'
+type MockLoanService_GetLoanAndLoanPayments_Call struct {
+	*mock.Call
+}
+
+// GetLoanAndLoanPayments is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int
+func (_e *MockLoanService_Expecter) GetLoanAndLoanPayments(ctx interface{}, id interface{}) *MockLoanService_GetLoanAndLoanPayments_Call {
+	return &MockLoanService_GetLoanAndLoanPayments_Call{Call: _e.mock.On("GetLoanAndLoanPayments", ctx, id)}
+}
+
+func (_c *MockLoanService_GetLoanAndLoanPayments_Call) Run(run func(ctx context.Context, id int)) *MockLoanService_GetLoanAndLoanPayments_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int
+		if args[1] != nil {
+			arg1 = args[1].(int)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockLoanService_GetLoanAndLoanPayments_Call) Return(loan psql.Loan, loanPayments []psql.LoanPayment, err error) *MockLoanService_GetLoanAndLoanPayments_Call {
+	_c.Call.Return(loan, loanPayments, err)
+	return _c
+}
+
+func (_c *MockLoanService_GetLoanAndLoanPayments_Call) RunAndReturn(run func(ctx context.Context, id int) (psql.Loan, []psql.LoanPayment, error)) *MockLoanService_GetLoanAndLoanPayments_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // PayLoan provides a mock function for the type MockLoanService
 func (_mock *MockLoanService) PayLoan(ctx context.Context, id int, amount int) (psql.Loan, error) {
 	ret := _mock.Called(ctx, id, amount)
